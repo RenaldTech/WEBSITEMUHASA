@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # SMP Muhammadiyah (Tahfidz) Salatiga - Website Resmi
 
 ## Deskripsi Proyek
@@ -187,3 +188,7 @@ Dilarang melakukan penggandaan tanpa izin tertulis dari pihak sekolah.
 ---
 
 **Dibuat dengan ❤️ untuk SMP Muhammadiyah (Tahfidz) Salatiga**
+=======
+# WEBSMPMUHASATRY
+web uji coba SMPMUHASA
+>>>>>>> b94745cdc8a8817be6912b4a3fd9f77a9b63f931
