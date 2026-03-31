@@ -11,6 +11,9 @@ $pilihan = getExtracurriculars('pilihan');
 
 // Get prestasi
 $achievements = getAchievements();
+
+// Get programs
+$programs = getPrograms();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -49,82 +52,28 @@ $achievements = getAchievements();
     </section>
 
 <!-- PROGRAM UNGGULAN -->
-<section class="section" style="background-color:#f9fafb;">
+<section id="program-unggulan" class="section" style="background-color:#f9fafb;">
     <h2 class="section-title">Program Unggulan</h2>
 
     <div class="cards-grid">
-
-        <div class="card">
-            <div class="card-header">
-                <h3>GO-Glow</h3>
-            </div>
-            <div class="card-body">
-                <p>1. Daily conversation</p>
-                <p>2. Story telling</p>
-                <p>3. Speech</p>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3>Pointer</h3>
-            </div>
-            <div class="card-body">
-                <p>1. Desain</p>
-                <p>2. Kalender</p>
-                <p>3. Undangan</p>
-                <p>4. Kartu nama</p>
-                <p>5. Sinematografi</p>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3>Sainsmatika</h3>
-            </div>
-            <div class="card-body">
-                <p>1. Memiliki club pendamping Matematika dan Sains</p>
-                <p>2. Prestasi di bidang Matematika dan Sains</p>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3>E-Sports</h3>
-            </div>
-            <div class="card-body">
-                <p>1. Wadah prestasi non akademik</p>
-                <p>2. Latihan dan kompetisi</p>
-                <p>3. Mengadakan lomba E-Sports</p>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3>Sispala</h3>
-            </div>
-            <div class="card-body">
-                <p>1. Wadah siswa pecinta alam</p>
-                <p>2. Belajar kompas, eksplorasi, dan pelestarian alam</p>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3>Ekstrakurikuler</h3>
-            </div>
-            <div class="card-body">
-                <p>
-                    Berbagai kegiatan ekstrakurikuler untuk mengembangkan 
-                    bakat siswa di bidang seni, olahraga, dan akademik.
-                </p>
-            </div>
-        </div>
-
+        <?php
+            // replace hard‑coded programs with dynamic data from database
+            $programs = getPrograms();
+            if (count($programs) === 0) {
+                echo '<p>Tidak ada program unggulan yang tersedia saat ini.</p>';
+            } else {
+                foreach ($programs as $prog) {
+                    echo '<div class="card">';
+                    echo '    <div class="card-header"><h3>' . htmlspecialchars($prog['title']) . '</h3></div>';
+                    echo '    <div class="card-body"><p>' . nl2br(htmlspecialchars($prog['description'])) . '</p></div>';
+                    echo '</div>';
+                }
+            }
+        ?>
     </div>
 </section>
     <!-- EKSTRAKURIKULER -->
-    <section class="ekskul-section">
+    <section id="ekstrakurikuler" class="ekskul-section">
 
     <h2 class="section-title">Ekstrakurikuler</h2>
 
@@ -154,7 +103,7 @@ $achievements = getAchievements();
 
 </section>
     <!-- PRESTASI -->
-  <section class="section">
+  <section id="prestasi" class="section">
     <h2 class="section-title">Prestasi Siswa</h2>
     <p class="section-subtitle">Pencapaian siswa dalam berbagai kompetisi</p>
     
@@ -206,9 +155,9 @@ $achievements = getAchievements();
             <div class="footer-section">
                 <h4>Quick Links</h4>
                 <a href="akademik.php">Home</a>
-                <a href="akademik.php#program unggulan">program unggulan</a>
-                <a href="akademik.php#ekstrakulikuler">ekstrakulikuler</a>
-                <a href="akademik.php#prestasi">prestasi</a>
+                <a href="akademik.php#program-unggulan">Program Unggulan</a>
+                <a href="akademik.php#ekstrakurikuler">Ekstrakurikuler</a>
+                <a href="akademik.php#prestasi">Prestasi</a>
             </div>
             <div class="footer-section">
                 <h4>All Pages</h4>

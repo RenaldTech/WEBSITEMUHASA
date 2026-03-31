@@ -1,4 +1,7 @@
--- Database untuk SMP Muhammadiyah
+<?php
+define('DB_HOST', '127.0.0.1:3306'); // or whatever port you’re using
+
+// Database untuk SMP Muhammadiyah
 CREATE DATABASE IF NOT EXISTS smp_muhammadiyah;
 USE smp_muhammadiyah;
 
@@ -74,6 +77,24 @@ CREATE TABLE achievements (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Tabel untuk Program Unggulan
+CREATE TABLE programs (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- sample program unggulan entries (optional)
+INSERT INTO programs (title, description) VALUES
+('GENTA (Tahfidz, Tajwid, BTQ)', 'Terdiri dari kelas Tahfiz, Tajwid, dan BTQ.\nDan didampingi guru berpengalaman dalam bidangnya. Dalam kelas Tahfidz siswa diharuskan menghafal minimal 1 juz.'),
+('POINTER (Corel Draw, Canva, Coding)', 'Siswa mampu membuat desain grafis mmt, poster, brosur, dll. Serta siswa dibimbing untuk dapat membuat videografi untuk seperti vlog, video deskripsi, iklan.'),
+('GO-GLOW (Story Telling)', 'Bekerjasama dengan sekolah internasional dalam meningkatkan kemampuan bahasa Inggris siswa.'),
+('SIM CLUB (Sains, Inggris, Math)', 'Menjuarai berbagai macam kejuaraan dari tingkat kota, provinsi hingga nasional.'),
+('Sispala', '1. Wadah siswa pecinta alam\n2. Belajar kompas, eksplorasi, dan pelestarian alam'),
+('CODING CLUB', 'Membekali siswa agar mampu menggunakan alat teknologi dengan bijak. Siswa dibimbing untuk mampu membuat pemograman sederhana.');
+
 -- Tabel untuk Ekstrakurikuler
 CREATE TABLE extracurriculars (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -93,6 +114,18 @@ CREATE TABLE announcements (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+-- Tabel untuk menyimpan pengaturan SPMB/PPDB seperti brosur dan PDF
+CREATE TABLE spmb_settings (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    banner_image VARCHAR(255),
+    technical_pdf VARCHAR(255),
+    announcement_pdf VARCHAR(255),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- insert empty row so application finds one
+INSERT INTO spmb_settings (banner_image, technical_pdf, announcement_pdf) VALUES ('', '', '');
 
 -- Tabel untuk Pesan dari Formulir Kontak
 CREATE TABLE contact_messages (

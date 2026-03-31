@@ -11,6 +11,9 @@ $featured = getArticles(3);
 // Get ekstrakurikuler
 $extracurriculars = getExtracurriculars();
 
+// Get programs (same as akademik page)
+$programs = getPrograms();
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -38,16 +41,13 @@ $extracurriculars = getExtracurriculars();
                 <li><a href="kontak.php">Kontak</a></li>
             </ul>
         </div>
-    </nav>
+    </nav>  
 
     <!-- HERO SECTION -->
-    <section class="hero">
+    <section class="hero home-hero">
         <div class="hero-content">
-            <h1>Selamat Datang di SMP Muhammadiyah (Tahfidz) Salatiga</h1>
-            <p>Membentuk generasi Islami yang berkarakter, unggul,</p>
-            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <a href="#visi-misi" class="btn btn-primary">Pelajari Lebih Lanjut</a>
-            </div>
+            <h1>Selamat Datang di SMP Muhammadiyah Salatiga</h1>
+            <p>Membangun generasi unggul dengan semangat Islami.</p>
         </div>
     </section>
 
@@ -55,14 +55,13 @@ $extracurriculars = getExtracurriculars();
 <section class="motto-section">
 
     <h2 class="welcome-title">
-        Selamat Datang di <br>
-        SMP Muhammadiyah Salatiga
+      
     </h2>
 
     <div class="welcome-card">
 
         <div class="welcome-image">
-            <img src="assets/images/siswa.jpg" alt="Siswa">
+            <img src="assets/images/baskara.png" alt="baskara">
         </div>
 
         <div class="welcome-text">
@@ -79,7 +78,7 @@ $extracurriculars = getExtracurriculars();
 </section>
 
     <!-- VISI DAN MISI -->
-    <section class="section">
+       <section class="section">
         <h2 class="section-title">Visi dan Misi</h2>
         <div class="visi-misi">
             <div class="visi-box">
@@ -92,9 +91,19 @@ $extracurriculars = getExtracurriculars();
             <div class="misi-box">
                 <h3>Misi</h3>
                 <ul style="list-style-position: inside; color: var(--text-dark); line-height: 2;">
-                    <p>1. Menanamkan kesadaran menjalankan sholat, membaca Al Qur'an secara optimal.</p>
-                    <p>2. Menanamkan kesadaran menjalankan sholat, membaca Al Qur'an secara optimal.</p>
-                    <p>3. Bebas buta baca tulis Al Qur'an untuk seluruh warga sekolah.</p>
+                    <p>1.Menanamkan kesadaran menjalankan sholat, membaca Al Qur'an secara optimal.</li>
+                    <p>2.Menanamkan kesadaran menjalankan sholat, membaca Al Qur'an secara optimal.</li>
+                    <p>3.Bebas buta baca tulis Al Qur'an untuk seluruh warga sekolah.</li>
+                    <p>4.Menumbuhkan karakter nasionalisme, mandiri, tanggung jawab, sopan santun, jujur dalam berucap dan berbuat</li>
+                    <p>5.Meningkatkan disiplin dan etos kerja yang tinggi dan pelayanan prima.</li>
+                    <p>6.Menumbuhkan semangat berprestasi dalam bidang akademis kepada seluruh warga sekolah</li>
+                    <p>7.Mengembangkan minat dan bakat seluruh warga sekolah serta meningkatkan prestasi non akademik.</li>
+                    <p>8.Meningkatkan kualitas sumber daya peserta didik, pendidik, dan tenaga kependidikan</li>
+                    <p>9.Mewujudkan pengembangan inovasi pembelajaran.</li>
+                    <p>10.Menumbuhkan semangat literasi, apresiasi seni, olah raga dan iptek pada seluruh warga sekolah.</li>
+                    <p>11.menjalin kerja sama yang harmonis antar warga sekolah, lingkungan dan pemerintah.</li>
+                    <p>12.mewujudkan sekolah yang bersih, hijau dan meminimalis hasil sampah yang tidak bermanfaat.</li>
+                    <p>13.menumbuhkan sikap pola hidup sehat dan berbudaya lingkungan.</li>
                 </ul>
             </div>
         </div>
@@ -105,74 +114,19 @@ $extracurriculars = getExtracurriculars();
     <h2 class="section-title">Program Unggulan</h2>
 
     <div class="cards-grid">
-
-        <div class="card">
-            <div class="card-header">
-                <h3>GO-Glow</h3>
-            </div>
-            <div class="card-body">
-                <p>1. Daily conversation</p>
-                <p>2. Story telling</p>
-                <p>3. Speech</p>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3>Pointer</h3>
-            </div>
-            <div class="card-body">
-                <p>1. Desain</p>
-                <p>2. Kalender</p>
-                <p>3. Undangan</p>
-                <p>4. Kartu nama</p>
-                <p>5. Sinematografi</p>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3>Sainsmatika</h3>
-            </div>
-            <div class="card-body">
-                <p>1. Memiliki club pendamping Matematika dan Sains</p>
-                <p>2. Prestasi di bidang Matematika dan Sains</p>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3>E-Sports</h3>
-            </div>
-            <div class="card-body">
-                <p>1. Wadah prestasi non akademik</p>
-                <p>2. Latihan dan kompetisi</p>
-                <p>3. Mengadakan lomba E-Sports</p>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3>Sispala</h3>
-            </div>
-            <div class="card-body">
-                <p>1. Wadah siswa pecinta alam</p>
-                <p>2. Belajar kompas, eksplorasi, dan pelestarian alam</p>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3>Ekstrakurikuler</h3>
-            </div>
-            <div class="card-body">
-                <p>
-                    Berbagai kegiatan ekstrakurikuler untuk mengembangkan 
-                    bakat siswa di bidang seni, olahraga, dan akademik.
-                </p>
-            </div>
-        </div>
-
+        <?php
+            // replace hard‑coded programs with dynamic data from database
+            if (count($programs) === 0) {
+                echo '<p>Tidak ada program unggulan yang tersedia saat ini.</p>';
+            } else {
+                foreach ($programs as $prog) {
+                    echo '<div class="card">';
+                    echo '    <div class="card-header"><h3>' . htmlspecialchars($prog['title']) . '</h3></div>';
+                    echo '    <div class="card-body"><p>' . nl2br(htmlspecialchars($prog['description'])) . '</p></div>';
+                    echo '</div>';
+                }
+            }
+        ?>
     </div>
 </section>
     <!-- INFO PENDAFTARAN -->

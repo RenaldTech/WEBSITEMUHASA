@@ -5,10 +5,13 @@ class Database {
     private $connection;
 
     public function __construct() {
-        $this->connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+        $this->connection = @new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
         
         if ($this->connection->connect_error) {
-            die("Connection failed: " . $this->connection->connect_error);
+            // more descriptive guidance for local development
+            die("Connection failed: " . $this->connection->connect_error . ".<br>" .
+                "Please make sure the MySQL/MariaDB server is running (e.g. start it via XAMPP Control Panel) " .
+                "and that the credentials in includes/config.php are correct.");
         }
         
         $this->connection->set_charset("utf8mb4");

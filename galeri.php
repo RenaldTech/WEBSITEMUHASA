@@ -46,7 +46,7 @@ $categories = ['akademik', 'keagamaan', 'olahraga', 'ekstrakurikuler'];
     </section>
 
     <!-- GALLERY FILTER & DISPLAY -->
-    <section class="section">
+    <section class="section" style="background-color:#f9fafb;">
         <h2 class="section-title">Koleksi Galeri</h2>
         
         <div class="gallery-filter">
@@ -60,7 +60,7 @@ $categories = ['akademik', 'keagamaan', 'olahraga', 'ekstrakurikuler'];
         <div id="galleryContainer" class="gallery">
             <?php foreach ($gallery as $item): ?>
                 <div class="gallery-item" data-category="<?php echo $item['category']; ?>">
-                    <img src="uploads/gallery/<?php echo $item['image_path']; ?>" alt="<?php echo $item['title']; ?>">
+                    <img src="uploads/<?php echo $item['image_path']; ?>" alt="<?php echo $item['title']; ?>">
                     <div class="gallery-overlay">
                         <h3><?php echo $item['title']; ?></h3>
                         <p><?php echo $item['description']; ?></p>

@@ -23,6 +23,10 @@ body {
     line-height: 1.6;
     color: var(--text-dark);
     background-color: #FFFFFF;
+    /* ensure long words or urls wrap instead of overflowing */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
 }
 
 /* NAVBAR */
@@ -94,34 +98,70 @@ nav {
 
 /* HERO */
 .hero {
-    background: linear-gradient(135deg, #0052CC 0%, #003D99 100%);
-    color: rgb(255, 255, 255);
-    padding: 5rem 2rem;
-    text-align: center;
-    min-height: 400px;
+    position: relative;
+    /* gambar saja sebagai latar tanpa overlay biru */
+    background: url("../images/sekolah.png") no-repeat center center;
+    background-size: cover;
+    min-height: 500px;
     display: flex;
-    align-items: center;
+    /* teks digeser ke bawah, berada di area gradien*/
+    align-items: flex-end;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 82, 204, 0.15);
+    text-align: center;
+    color: #fff;
+    /* beri padding bawah lebih besar supaya teks tidak menempel pada tepi */
+    padding: 1% 1% 1%; /* pad bawah ditambah lagi untuk menggeser konten lebih bawah */
 }
 
+/* teks di dalam hero */
 .hero-content {
-    max-width: 900px;
-    margin: 0 auto;
+    /* hapus latar agar terlihat seperti teks biasa di atas gradien */
+    background: none;
+    padding: 0;
+    max-width: none;
+    position: absolute;
+    bottom: 10%; /* dinaikkan agar teks lebih tinggi */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2; /* pastikan berada di depan gradien hero::after */
+    text-align: center;
 }
 
-.hero h1 {
-    font-size: 2.8rem;
+/* khusus untuk halaman beranda, biarkan teks tetap rendah */
+.home-hero .hero-content {
+    bottom: 0%;
+}
+
+.hero-content h1 {
+    font-size: 3rem;          /* lebih besar seperti screenshot */
     margin-bottom: 1rem;
     font-weight: 700;
     letter-spacing: -0.5px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    /* shadow dihapus */
+    color: var(--primary-color); /* teks berwarna biru */
 }
 
-.hero p {
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
-    opacity: 0.95;
+/* gradient bawah agar menyatu ke latar #f9fafb (warna section program) */
+.hero::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 400px; /* transisi lebih panjang */
+    background: linear-gradient(to bottom,
+        rgba(255,255,255,0) 0%,        /* transparan awal */
+        rgba(255,255,255,0.5) 50%,     /* mulai memucat ke putih */
+        rgba(249,250,251,0.8) 80%,     /* mendekati warna section */
+        #f9fafb 100%);
+    pointer-events: none;
+}
+
+.hero-content p {
+    font-size: 1.25rem;
+    opacity: .9;
+    color: var(--primary-color); /* teks berwarna biru */
+    /* tidak ada text-shadow */
 }
 
 /* BUTTONS */
@@ -173,10 +213,11 @@ nav {
     max-width: 1200px;
     margin: 0 auto;
     padding: 3.5rem 2rem;
+    background-color: #fff; /* pastikan latar semua section putih */
 }
 
 .section-title {
-    font-size: 2.5rem;
+    font-size: 3rem;
     color: var(--primary-color);
     margin-bottom: 3rem;
     text-align: center;
@@ -195,9 +236,35 @@ nav {
 
 /* MOTTO/BASKARA */
 .motto-section{
-background:#e5e7eb;
-padding:80px 20px;
-text-align:center;
+    /* gunakan warna sama seperti section program (#f9fafb) agar menyatu */
+    background:#f9fafb;
+    padding:80px 20px;
+    text-align:center;
+}
+
+/* PPDB page styling */
+.ppdb-section .ppdb-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.ppdb-section .ppdb-image {
+    flex: 1 1 400px;
+    /* optionally limit the container width */
+    max-width: 600px;
+}
+
+.ppdb-section .ppdb-image img {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+}
+
+.ppdb-section .ppdb-links {
+    flex: 1 1 300px;
 }
 
 .welcome-title{
@@ -293,6 +360,19 @@ color:#444;
     overflow: hidden;
 }
 
+/* ensure awkward long words break in article and comments */
+.article-content,
+.comment,
+.comment p,
+.comment-reply p,
+.card-body,
+.card-body p {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    /* allow breaking inside long words if needed */
+    word-break: break-all;
+}
+
 .card:hover {
     transform: translateY(-6px);
     box-shadow: 0 8px 25px rgba(0,0,0,0.15);
@@ -385,7 +465,7 @@ tbody tr:hover {
 
 .gallery-item img {
     width: 100%;
-    height: 250px;
+    aspect-ratio: 1 / 1; /* ensure square */
     object-fit: cover;
     transition: transform 0.3s ease;
 }
@@ -546,6 +626,22 @@ tbody tr:hover {
     transform: translate(-50%, -50%);
 }
 
+/* additional modal style for forms/other content */
+.modal .modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    margin: 5% auto;
+}
+
 .modal-close {
     position: absolute;
     top: 30px;
@@ -559,6 +655,13 @@ tbody tr:hover {
 .modal-close:hover {
     color: #bbb;
 }
+
+/* generic form groups used by modals */
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+.form-group input,
+.form-group select,
+.form-group textarea { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 1rem; }
 
 /* SPMB */
 .timeline {
@@ -953,6 +1056,20 @@ text-decoration:none;
 color:#333;
 box-shadow:0 4px 10px rgba(0,0,0,0.08);
 transition:0.3s;
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:0.5rem;
+}
+
+.social-card img {
+    width: 80px !important;
+    height: 80px !important;
+    max-width: 80px;
+    max-height: 80px;
+    object-fit: contain;
+    margin: 0 auto 15px;
+    display: block;
 }
 
 .social-card:hover{

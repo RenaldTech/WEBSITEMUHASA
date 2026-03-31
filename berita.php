@@ -5,6 +5,17 @@ require_once 'includes/functions.php';
 
 global $db;
 
+// jika admin mengirim form tambah berita
+$admin_message = '';
+if (isLoggedIn() && isAdmin() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['admin_article'])) {
+    // gunakan fungsi baru dari includes/functions.php
+    if (addArticle(array_merge($_POST, ['author_id' => $_SESSION['user_id']]), $_FILES['featured_image'] ?? null)) {
+        $admin_message = 'Berita berhasil ditambahkan.';
+    } else {
+        $admin_message = 'Gagal menambahkan berita.';
+    }
+}
+
 // Get pages per content
 $per_page = 6;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -71,6 +82,13 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name ASC")->fetch_al
         <div class="search-box">
             <input type="text" id="searchNews" placeholder="🔍 Cari berita..." style="padding: 0.75rem 1rem;" onkeyup="searchArticles()">
         </div>
+
+        <?php if (isLoggedIn() && isAdmin()): ?>
+            <?php if ($admin_message): ?>
+                <p class="alert alert-success" style="margin-top:1rem"><?php echo $admin_message; ?></p>
+            <?php endif; ?>
+            
+        <?php endif; ?>
     </section>
 
     <!-- BERITA LIST -->
@@ -125,6 +143,52 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name ASC")->fetch_al
         </div>
     </section>
 
+    <?php if (isLoggedIn() && isAdmin()): ?>
+    <!-- ADMIN ADD ARTICLE MODAL -->
+    <div id="adminArticleModal" class="modal">
+        <div class="modal-content" style="max-width:600px;">
+            <span class="modal-close" onclick="closeModal('adminArticleModal')">&times;</span>
+            <h2>Tambah Berita Baru</h2>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="admin_article" value="1">
+                <div class="form-group">
+                    <label>Judul</label>
+                    <input type="text" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label>Kategori</label>
+                    <select name="category_id" required>
+                        <?php foreach ($categories as $cat): ?>
+                        <option value="<?php echo $cat['id']; ?>"><?php echo $cat['name']; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Ringkasan</label> <!-- human-readable, DB field still excerpt -->
+                    <textarea name="excerpt"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Isi</label>
+                    <textarea name="content" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Gambar Utama</label>
+                    <input type="file" name="featured_image" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status">
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Simpan</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('adminArticleModal')">Batal</button>
+            </form>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- FOOTER -->
     <footer>
         <div class="footer-container">
@@ -171,5 +235,11 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name ASC")->fetch_al
             }
         }
     </script>
+    <?php if (isLoggedIn() && isAdmin()): ?>
+    <script>
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+    </script>
+    <?php endif; ?>
 </body>
 </html>

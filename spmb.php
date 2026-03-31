@@ -5,7 +5,11 @@ require_once 'includes/functions.php';
 
 // Buat file ini sesuai dengan spmb.html yang sudah ada
 // File ini masih menggunakan HTML static untuk PPDB
+
+// ambil setting SPMB
+$spmb = $db->query("SELECT * FROM spmb_settings LIMIT 1")->fetch_assoc();
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -42,7 +46,9 @@ require_once 'includes/functions.php';
 <div class="ppdb-grid">
 
 <div class="ppdb-image">
-<img src="assets/images/brosur-ppdb.jpg" alt="Brosur PPDB">
+<?php if (!empty($spmb['banner_image'])): ?>
+    <img src="uploads/<?php echo htmlspecialchars($spmb['banner_image']); ?>" alt="Brosur PPDB">
+<?php endif; ?>
 </div>
 
 <div class="ppdb-links">
@@ -62,21 +68,26 @@ require_once 'includes/functions.php';
 
 </section>
 
+<?php if (!empty($spmb['technical_pdf'])): ?>
 <section class="section">
 
 <h2 class="section-title">Petunjuk Teknis</h2>
 
 <div class="pdf-viewer">
-
-<iframe 
-src="assets/pdf/juknis-ppdb.pdf" 
-width="100%" 
-height="600px">
-</iframe>
-
+    <iframe 
+    src="uploads/<?php echo htmlspecialchars($spmb['technical_pdf']); ?>" 
+    width="100%" 
+    height="600px">
+    </iframe>
+</div>
+<div style="text-align:center; margin-top:15px;">
+    <a href="uploads/<?php echo htmlspecialchars($spmb['technical_pdf']); ?>" class="btn btn-primary" download>Download Petunjuk Teknis</a>
 </div>
 
 </section>
+<?php endif; ?>
+
+<?php if (!empty($spmb['announcement_pdf'])): ?>
 <section class="section">
 
 <h2 class="section-title">Pengumuman</h2>
@@ -88,25 +99,22 @@ Hasil seleksi penerimaan peserta didik baru akan diumumkan
 setelah proses seleksi selesai dilakukan.
 </p>
 
-<a href="#" class="btn btn-primary">
-Download Informasi Berkas dan Jadwal Daftar Ulang
-</a>
+<a href="uploads/<?php echo htmlspecialchars($spmb['announcement_pdf']); ?>" class="btn btn-primary" download>Download Pengumuman</a>
 
 </div>
 
 <h2 class="section-title">Link Hasil Seleksi Akhir Peserta PPDB</h2>
 
 <div class="pdf-viewer">
-
-<iframe 
-src="assets/pdf/hasil-seleksi.pdf"
-width="100%"
-height="700px">
-</iframe>
-
+    <iframe 
+    src="uploads/<?php echo htmlspecialchars($spmb['announcement_pdf']); ?>"
+    width="100%"
+    height="700px">
+    </iframe>
 </div>
 
 </section>
+<?php endif; ?>
     <!-- FOOTER -->
      <footer>
         <div class="footer-container">

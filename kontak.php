@@ -10,6 +10,25 @@ require_once 'includes/functions.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kontak - SMP Muhammadiyah (Tahfidz) Salatiga</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        /* enforce uniform icon dimensions in case stylesheet is cached */
+        .social-card img { width: 80px !important; height: 80px !important; object-fit: contain; margin: 0 auto 15px; display: block; }
+
+        .social-card{
+            background:white;
+            padding:30px;
+            border-radius:10px;
+            text-align:center;
+            text-decoration:none;
+            color:#333;
+            box-shadow:0 4px 10px rgba(0,0,0,0.08);
+            transition:0.3s;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            gap:0.5rem;
+        }
+    </style>
 </head>
 <body>
     <!-- NAVBAR -->
@@ -45,25 +64,25 @@ require_once 'includes/functions.php';
     <div class="social-grid">
 
         <a href="https://facebook.com/smpmuhammadiyahsalatiga" target="_blank" class="social-card facebook">
-            <div>📘</div>
+            <img src="assets/images/facebook.jpg" alt="Facebook">
             <h3>Facebook</h3>
             <p>SMP Muhammadiyah Salatiga</p>
         </a>
 
         <a href="https://instagram.com/smpmuhammadiyahsalatiga" target="_blank" class="social-card instagram">
-            <div>📷</div>
+            <img src="assets/images/instagram.jpg" alt="Instagram">
             <h3>Instagram</h3>
             <p>@smpmuhammadiyahsalatiga</p>
         </a>
 
         <a href="https://tiktok.com/@smpmuhammadiyahsalatiga" target="_blank" class="social-card tiktok">
-            <div>🎵</div>
+            <img src="assets/images/tiktok.jpg" alt="TikTok">
             <h3>TikTok</h3>
             <p>@smpmuhammadiyahsalatiga</p>
         </a>
 
         <a href="https://youtube.com/@smpmuhammadiyahcempakasala5600" target="_blank" class="social-card youtube">
-            <div>▶️</div>
+            <img src="assets/images/youtube.jpg" alt="YouTube">
             <h3>YouTube</h3>
             <p>SMP Muhammadiyah Salatiga</p>
         </a>
@@ -75,13 +94,28 @@ require_once 'includes/functions.php';
 
     <div class="contact-grid">
 
-        <!-- MAP -->
-        <div class="map-container">
-            <iframe 
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.6701839087667!2d110.98394512346854!3d-7.219384892015637"
-            width="100%" height="100%" style="border:0;" loading="lazy"></iframe>
+        <!-- MAP (static image linking to Google Maps app) -->
+        <div class="map-container" style="position:relative; cursor:pointer;">
+            <!-- replace 'assets/images/map-preview.png' with the actual image you provided -->
+            <a href="https://maps.app.goo.gl/8B1vxUkt4LJeHs5NA" target="_blank" id="mapLink" style="display:block; position:relative;">
+                <img src="assets/images/maps.png" alt="Lokasi SMP Muhammadiyah Salatiga" style="width:100%; display:block;">
+                <!-- overlay now inside link so clicks hit it too -->
+                <div id="mapOverlay" style="
+                    position:absolute; top:0; left:0; width:100%; height:100%;
+                    background:rgba(0,0,0,0.4); opacity:0; transition:opacity 0.2s;
+                    display:flex; align-items:center; justify-content:center;
+                    color:#fff; font-weight:700; font-size:1.2rem;
+                    pointer-events:none; /* allow clicks through overlay */
+                ">Lihat di Google Maps</div>
+            </a>
         </div>
-
+        <script>
+            const mapContainer = document.querySelector('.map-container');
+            const overlay = document.getElementById('mapOverlay');
+            mapContainer.addEventListener('mouseenter', () => overlay.style.opacity = '1');
+            mapContainer.addEventListener('mouseleave', () => overlay.style.opacity = '0');
+        </script>
+ 
         <!-- CONTACT INFO -->
         <div class="contact-details">
 

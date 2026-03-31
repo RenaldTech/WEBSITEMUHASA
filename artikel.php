@@ -50,11 +50,25 @@ $related = $db->query("SELECT * FROM articles
             padding-bottom: 20px;
         }
         
+        .article-date {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.6rem;
+        }
+        
         .article-header h1 {
             color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+        
+        .article-author {
+            font-size: 1rem;
+            color: #333;
             margin-bottom: 15px;
         }
         
+        /* optional info container (currently commented out in markup) */
         .article-info {
             display: flex;
             gap: 20px;
@@ -83,6 +97,11 @@ $related = $db->query("SELECT * FROM articles
             line-height: 1.8;
             color: #333;
             margin-bottom: 40px;
+            /* break long words and prevent overflow */
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: break-all;
+            white-space: normal;
         }
         
         .article-content p {
@@ -187,13 +206,14 @@ $related = $db->query("SELECT * FROM articles
         <div class="article-container">
             <!-- ARTICLE HEADER -->
             <div class="article-header">
+                <div class="article-date">📅 <?php echo formatDate($article['published_at']); ?></div>
                 <h1><?php echo $article['title']; ?></h1>
-                <div class="article-info">
-                    <span>📅 <?php echo formatDate($article['published_at']); ?></span>
-                    <span>👤 <?php echo $article['author_name']; ?></span>
+                <div class="article-author">Oleh <?php echo $article['author_name']; ?></div>
+                <!-- optional metadata could go here if needed -->
+                <!-- <div class="article-info">
                     <span>📂 <?php echo $article['category_name']; ?></span>
                     <span>👁️ <?php echo $article['views']; ?> pembaca</span>
-                </div>
+                </div> -->
             </div>
             
             <!-- FEATURED IMAGE -->
@@ -218,7 +238,13 @@ $related = $db->query("SELECT * FROM articles
                             <div class="comment">
                                 <div class="comment-author"><?php echo $comment['author_name']; ?></div>
                                 <div class="comment-date"><?php echo formatDate($comment['created_at']); ?></div>
-                                <p><?php echo $comment['content']; ?></p>
+                                <p><?php echo nl2br(htmlspecialchars($comment['content'])); ?></p>
+                                <?php if (!empty($comment['admin_reply'])): ?>
+                                    <div class="comment-reply" style="margin-top:10px; padding:10px; background:#e5f3ff; border-left:4px solid var(--primary-color);">
+                                        <strong>Balasan Admin:</strong>
+                                        <p><?php echo nl2br(htmlspecialchars($comment['admin_reply'])); ?></p>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     </div>
