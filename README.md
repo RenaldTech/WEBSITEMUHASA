@@ -176,10 +176,9 @@ Semua konten dapat dengan mudah diubah melalui editing file HTML:
 ## Support
 
 Untuk pertanyaan atau bantuan lebih lanjut, hubungi:
-- 📞 (0298) 322 441
-- 📧 spmuhammadiyahplus@gmail.com
-- 📱 WhatsApp: 0857 2848 9757
-
+- 📞 
+- 📧 
+- 📱 
 ## License
 
 Website ini adalah milik SMP Muhammadiyah (Tahfidz) Salatiga.
