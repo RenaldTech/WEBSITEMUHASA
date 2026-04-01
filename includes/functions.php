@@ -7,15 +7,20 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once 'db.php';
+require_once __DIR__ . '/../src/classes/Validator.php';
+require_once __DIR__ . '/../src/classes/FileUpload.php';
+require_once __DIR__ . '/../src/classes/Logger.php';
+
+$logger = new Logger(LOG_BASE_PATH);
 
 // ensure comments table has admin_reply column (run once)
-if ($db) {
-    $col = $db->query("SHOW COLUMNS FROM comments LIKE 'admin_reply'");
-    if ($col->num_rows === 0) {
-        $db->query("ALTER TABLE comments ADD COLUMN admin_reply TEXT NULL");
+if (isset($db) && $db instanceof Database) {
+    $col = $db->fetchOne("SHOW COLUMNS FROM comments LIKE 'admin_reply'");
+    if (empty($col)) {
+        $db->execute("ALTER TABLE comments ADD COLUMN admin_reply TEXT NULL");
     }
     // create programs table if it doesn't exist yet
-    $db->query("CREATE TABLE IF NOT EXISTS programs (
+    $db->execute("CREATE TABLE IF NOT EXISTS programs (
         id INT PRIMARY KEY AUTO_INCREMENT,
         title VARCHAR(255) NOT NULL,
         description TEXT,
@@ -72,92 +77,23 @@ function isValidEmail($email) {
  * Upload an image and return status array
  */
 function uploadImage($file, $folder = 'articles') {
-    global $db;
+    global $logger;
 
-    if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
-        return ['success' => false, 'message' => 'File tidak ditemukan'];
+    try {
+        $upload = FileUpload::store($file, $folder);
+    } catch (InvalidArgumentException $e) {
+        $logger->error('Invalid image upload folder', ['exception' => $e->getMessage(), 'folder' => $folder]);
+        return ['success' => false, 'message' => 'Folder upload tidak valid. Silakan hubungi administrator.'];
+    } catch (Throwable $e) {
+        $logger->error('Image upload failed unexpectedly', ['exception' => $e->getMessage(), 'folder' => $folder]);
+        return ['success' => false, 'message' => 'Terjadi kesalahan saat mengunggah gambar. Silakan coba lagi.'];
     }
 
-    $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!in_array($file['type'], $allowed)) {
-        return ['success' => false, 'message' => 'Tipe file tidak diizinkan'];
+    if (!$upload['success']) {
+        $logger->warning('Invalid image upload', ['error' => $upload['message'], 'folder' => $folder]);
     }
 
-    if ($file['size'] > MAX_FILE_SIZE) {
-        return ['success' => false, 'message' => 'Ukuran file terlalu besar'];
-    }
-
-    $upload_path = UPLOAD_DIR . $folder . '/';
-    if (!is_dir($upload_path)) {
-        mkdir($upload_path, 0755, true);
-    }
-
-    $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file['name']);
-    $filepath = $upload_path . $filename;
-
-    if (move_uploaded_file($file['tmp_name'], $filepath)) {
-        // try resize to square if GD functions are available
-        if (function_exists('imagecreatetruecolor') && function_exists('getimagesize')) {
-            list($origW, $origH, $type) = getimagesize($filepath);
-            $size = 300; // target width/height
-            $dst = imagecreatetruecolor($size, $size);
-            // create source image based on type
-            switch ($type) {
-                case IMAGETYPE_JPEG:
-                    $src = imagecreatefromjpeg($filepath);
-                    break;
-                case IMAGETYPE_PNG:
-                    $src = imagecreatefrompng($filepath);
-                    // preserve transparency
-                    imagecolortransparent($dst, imagecolorallocatealpha($dst, 0, 0, 0, 127));
-                    imagealphablending($dst, false);
-                    imagesavealpha($dst, true);
-                    break;
-                case IMAGETYPE_GIF:
-                    $src = imagecreatefromgif($filepath);
-                    break;
-                case IMAGETYPE_WEBP:
-                    $src = imagecreatefromwebp($filepath);
-                    break;
-                default:
-                    $src = null;
-            }
-            if ($src) {
-                // calculate cropping square
-                if ($origW > $origH) {
-                    $src_x = ($origW - $origH) / 2;
-                    $src_y = 0;
-                    $src_size = $origH;
-                } else {
-                    $src_x = 0;
-                    $src_y = ($origH - $origW) / 2;
-                    $src_size = $origW;
-                }
-                imagecopyresampled($dst, $src, 0, 0, $src_x, $src_y, $size, $size, $src_size, $src_size);
-                // overwrite original file
-                switch ($type) {
-                    case IMAGETYPE_JPEG:
-                        imagejpeg($dst, $filepath, 85);
-                        break;
-                    case IMAGETYPE_PNG:
-                        imagepng($dst, $filepath);
-                        break;
-                    case IMAGETYPE_GIF:
-                        imagegif($dst, $filepath);
-                        break;
-                    case IMAGETYPE_WEBP:
-                        imagewebp($dst, $filepath);
-                        break;
-                }
-                imagedestroy($src);
-                imagedestroy($dst);
-            }
-        }
-
-        return ['success' => true, 'filename' => $filename, 'path' => $folder . '/' . $filename];
-    }
-
-    return ['success' => false, 'message' => 'Gagal upload file'];
+    return $upload;
 }
 
 /**
@@ -165,61 +101,69 @@ function uploadImage($file, $folder = 'articles') {
  * returns ['success'=>bool, 'path'=>folder/filename, 'message'=>string]
  */
 function uploadFile($file, $folder = 'spmb') {
-    if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
-        return ['success' => false, 'message' => 'File tidak ditemukan'];
+    global $logger;
+
+    try {
+        $upload = FileUpload::store($file, $folder);
+    } catch (InvalidArgumentException $e) {
+        $logger->error('Invalid file upload folder', ['exception' => $e->getMessage(), 'folder' => $folder]);
+        return ['success' => false, 'message' => 'Folder upload tidak valid. Silakan hubungi administrator.'];
+    } catch (Throwable $e) {
+        $logger->error('File upload failed unexpectedly', ['exception' => $e->getMessage(), 'folder' => $folder]);
+        return ['success' => false, 'message' => 'Terjadi kesalahan saat mengunggah file. Silakan coba lagi.'];
     }
-    if ($file['size'] > MAX_FILE_SIZE) {
-        return ['success' => false, 'message' => 'Ukuran file terlalu besar'];
+
+    if (!$upload['success']) {
+        $logger->warning('Invalid file upload', ['error' => $upload['message'], 'folder' => $folder]);
     }
-    $upload_path = UPLOAD_DIR . $folder . '/';
-    if (!is_dir($upload_path)) {
-        mkdir($upload_path, 0755, true);
-    }
-    $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file['name']);
-    $filepath = $upload_path . $filename;
-    if (move_uploaded_file($file['tmp_name'], $filepath)) {
-        return ['success' => true, 'path' => $folder . '/' . $filename];
-    }
-    return ['success' => false, 'message' => 'Gagal memindahkan file'];
+
+    return $upload;
 }
 
 /* database helper functions */
 
 function getArticles($limit = null, $category_id = null, $status = 'published') {
     global $db;
-    $status = $db->escapeString($status);
-    $sql = "SELECT a.*, c.name as category_name, u.username as author_name 
-            FROM articles a 
-            LEFT JOIN categories c ON a.category_id = c.id 
-            LEFT JOIN users u ON a.author_id = u.id 
-            WHERE a.status = '$status'";
+
+    $sql = "SELECT a.*, c.name as category_name, u.username as author_name
+            FROM articles a
+            LEFT JOIN categories c ON a.category_id = c.id
+            LEFT JOIN users u ON a.author_id = u.id
+            WHERE a.status = ?";
+
+    $params = [$status];
+
     if ($category_id) {
-        $sql .= " AND a.category_id = " . (int)$category_id;
+        $sql .= " AND a.category_id = ?";
+        $params[] = (int)$category_id;
     }
+
     $sql .= " ORDER BY a.published_at DESC";
+
     if ($limit) {
-        $sql .= " LIMIT " . (int)$limit;
+        $limit = (int)$limit;
+        $sql .= " LIMIT $limit";
     }
-    $result = $db->query($sql);
-    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+
+    return $db->fetchAll($sql, $params);
 }
 
 function getArticleBySlug($slug) {
     global $db;
-    $slug = $db->escapeString($slug);
-    $sql = "SELECT a.*, c.name as category_name, u.username as author_name 
-            FROM articles a 
-            LEFT JOIN categories c ON a.category_id = c.id 
-            LEFT JOIN users u ON a.author_id = u.id 
-            WHERE a.slug = '$slug' AND a.status = 'published' LIMIT 1";
-    $result = $db->query($sql);
-    return $result ? $result->fetch_assoc() : null;
+
+    return $db->fetchOne(
+        "SELECT a.*, c.name as category_name, u.username as author_name
+            FROM articles a
+            LEFT JOIN categories c ON a.category_id = c.id
+            LEFT JOIN users u ON a.author_id = u.id
+            WHERE a.slug = ? AND a.status = 'published' LIMIT 1",
+        [$slug]
+    );
 }
 
 function updateArticleViews($article_id) {
     global $db;
-    $id = (int)$article_id;
-    $db->query("UPDATE articles SET views = views + 1 WHERE id = $id");
+    $db->execute("UPDATE articles SET views = views + 1 WHERE id = ?", [(int)$article_id]);
 }
 
 /**
@@ -229,11 +173,11 @@ function updateArticleViews($article_id) {
 function addArticle($data, $file = null) {
     global $db;
 
-    $title       = $db->escapeString($data['title']);
-    $category_id = (int)$data['category_id'];
-    $content     = $db->escapeString($data['content']);
-    $excerpt     = $db->escapeString($data['excerpt']);
-    $status      = $db->escapeString($data['status']);
+    $title       = Validator::sanitizeString($data['title'] ?? '');
+    $category_id = (int)($data['category_id'] ?? 0);
+    $content     = Validator::sanitizeRichText($data['content'] ?? '');
+    $excerpt     = Validator::sanitizeString($data['excerpt'] ?? '');
+    $status      = Validator::sanitizeString($data['status'] ?? 'draft');
     $slug        = createSlug($title);
     $author_id   = isset($data['author_id']) ? (int)$data['author_id'] : null;
 
@@ -245,19 +189,22 @@ function addArticle($data, $file = null) {
         }
     }
 
-    $published_at = ($status === 'published') ? date('Y-m-d H:i:s') : null;
+    $published_at = $status === 'published' ? date('Y-m-d H:i:s') : null;
 
-    $fields = "title, slug, category_id, author_id, content, excerpt";
-    $values = "'$title', '$slug', $category_id, " . ($author_id ? $author_id : 'NULL') . ", '$content', '$excerpt'";
-    if ($featured_image) {
-        $fields .= ", featured_image";
-        $values .= ", '$featured_image'";
-    }
-    $fields .= ", status, published_at";
-    $values .= ", '$status', " . ($published_at ? "'$published_at'" : "NULL");
+    $sql = "INSERT INTO articles (title, slug, category_id, author_id, content, excerpt, status, featured_image, published_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    $sql = "INSERT INTO articles ($fields) VALUES ($values)";
-    return $db->query($sql);
+    return $db->execute($sql, [
+        $title,
+        $slug,
+        $category_id,
+        $author_id,
+        $content,
+        $excerpt,
+        $status,
+        $featured_image,
+        $published_at,
+    ]);
 }
 
 /**
@@ -267,11 +214,11 @@ function updateArticle($id, $data, $file = null) {
     global $db;
     $id = (int)$id;
 
-    $title       = $db->escapeString($data['title']);
-    $category_id = (int)$data['category_id'];
-    $content     = $db->escapeString($data['content']);
-    $excerpt     = $db->escapeString($data['excerpt']);
-    $status      = $db->escapeString($data['status']);
+    $title       = Validator::sanitizeString($data['title'] ?? '');
+    $category_id = (int)($data['category_id'] ?? 0);
+    $content     = Validator::sanitizeRichText($data['content'] ?? '');
+    $excerpt     = Validator::sanitizeString($data['excerpt'] ?? '');
+    $status      = Validator::sanitizeString($data['status'] ?? 'draft');
     $slug        = createSlug($title);
 
     $featured_image = '';
@@ -282,121 +229,105 @@ function updateArticle($id, $data, $file = null) {
         }
     }
 
-    $published_at_sql = '';
-    if ($status === 'published') {
-        $check = $db->query("SELECT published_at FROM articles WHERE id = $id")->fetch_assoc();
-        if (!$check['published_at']) {
-            $published_at_sql = ", published_at = '" . date('Y-m-d H:i:s') . "'";
-        }
-    }
+    $check = $db->fetchOne('SELECT published_at FROM articles WHERE id = ?', [$id]);
+    $published_at = $status === 'published' && empty($check['published_at']) ? date('Y-m-d H:i:s') : $check['published_at'];
 
-    $sql = "UPDATE articles SET ";
-    $sql .= "title='$title', slug='$slug', category_id=$category_id, content='$content', excerpt='$excerpt', status='$status'";
-    if ($featured_image) {
-        $sql .= ", featured_image='$featured_image'";
-    }
-    $sql .= $published_at_sql;
-    $sql .= " WHERE id=$id";
-
-    return $db->query($sql);
+    $sql = "UPDATE articles SET title = ?, slug = ?, category_id = ?, content = ?, excerpt = ?, status = ?, featured_image = ?, published_at = ? WHERE id = ?";
+    return $db->execute($sql, [$title, $slug, $category_id, $content, $excerpt, $status, $featured_image, $published_at, $id]);
 }
 
 function getComments($article_id, $status = 'approved') {
     global $db;
-    $id = (int)$article_id;
-    $status = $db->escapeString($status);
-    $sql = "SELECT * FROM comments 
-            WHERE article_id = $id AND status = '$status' 
-            ORDER BY created_at DESC";
-    $result = $db->query($sql);
-    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    return $db->fetchAll(
+        'SELECT * FROM comments WHERE article_id = ? AND status = ? ORDER BY created_at DESC',
+        [(int)$article_id, $status]
+    );
 }
 
 function addComment($article_id, $author_name, $author_email, $content) {
     global $db;
-    $article_id = (int)$article_id;
-    $author_name = $db->escapeString($author_name);
-    $author_email = $db->escapeString($author_email);
-    $content = $db->escapeString($content);
-    $sql = "INSERT INTO comments (article_id, author_name, author_email, content) 
-            VALUES ($article_id, '$author_name', '$author_email', '$content')";
-    return $db->query($sql);
+    return $db->execute(
+        'INSERT INTO comments (article_id, author_name, author_email, content) VALUES (?, ?, ?, ?)',
+        [(int)$article_id, Validator::sanitizeString($author_name), Validator::sanitizeString($author_email), Validator::sanitizeString($content)]
+    );
 }
 
 function getGallery($category = null) {
     global $db;
-    $sql = "SELECT * FROM gallery";
+
     if ($category) {
-        $sql .= " WHERE category = '" . $db->escapeString($category) . "'";
+        return $db->fetchAll(
+            'SELECT * FROM gallery WHERE category = ? ORDER BY created_at DESC',
+            [Validator::sanitizeString($category)]
+        );
     }
-    $sql .= " ORDER BY created_at DESC";
-    $result = $db->query($sql);
-    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+
+    return $db->fetchAll('SELECT * FROM gallery ORDER BY created_at DESC');
 }
 
 function getAchievements() {
     global $db;
-    $sql = "SELECT * FROM achievements ORDER BY year DESC, id DESC";
-    $result = $db->query($sql);
-    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    return $db->fetchAll('SELECT * FROM achievements ORDER BY year DESC, id DESC');
 }
 
 function getExtracurriculars($type = null) {
     global $db;
-    $sql = "SELECT * FROM extracurriculars";
+
     if ($type) {
-        $sql .= " WHERE type = '" . $db->escapeString($type) . "'";
+        return $db->fetchAll('SELECT * FROM extracurriculars WHERE type = ? ORDER BY name ASC', [Validator::sanitizeString($type)]);
     }
-    $sql .= " ORDER BY name ASC";
-    $result = $db->query($sql);
-    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+
+    return $db->fetchAll('SELECT * FROM extracurriculars ORDER BY name ASC');
 }
 
 /* PROGRAM UNGGULAN helpers */
 function getPrograms() {
     global $db;
-    $sql = "SELECT * FROM programs ORDER BY id ASC";
-    $result = $db->query($sql);
-    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    return $db->fetchAll('SELECT * FROM programs ORDER BY id ASC');
 }
 
 function addProgram($title, $description) {
     global $db;
-    $t = $db->escapeString($title);
-    $d = $db->escapeString($description);
-    $sql = "INSERT INTO programs (title, description) VALUES ('$t', '$d')";
-    return $db->query($sql);
+    $t = Validator::sanitizeString($title);
+    $d = Validator::sanitizeString($description);
+    return $db->execute(
+        'INSERT INTO programs (title, description) VALUES (?, ?)',
+        [$t, $d]
+    );
 }
 
 function updateProgram($id, $title, $description) {
     global $db;
     $id = (int)$id;
-    $t = $db->escapeString($title);
-    $d = $db->escapeString($description);
-    $sql = "UPDATE programs SET title='$t', description='$d' WHERE id=$id";
-    return $db->query($sql);
+    $t = Validator::sanitizeString($title);
+    $d = Validator::sanitizeString($description);
+    return $db->execute(
+        'UPDATE programs SET title = ?, description = ? WHERE id = ?',
+        [$t, $d, $id]
+    );
 }
 
 function deleteProgram($id) {
     global $db;
-    $id = (int)$id;
-    return $db->query("DELETE FROM programs WHERE id=$id");
+    return $db->execute('DELETE FROM programs WHERE id = ?', [(int)$id]);
 }
 
 function searchArticles($keyword, $limit = 10) {
     global $db;
-    $keyword = $db->escapeString($keyword);
-    $sql = "SELECT a.*, c.name as category_name, u.username as author_name 
-            FROM articles a 
-            LEFT JOIN categories c ON a.category_id = c.id 
-            LEFT JOIN users u ON a.author_id = u.id 
-            WHERE a.status = 'published' AND 
-            (a.title LIKE '%$keyword%' OR a.content LIKE '%$keyword%' OR 
-             a.excerpt LIKE '%$keyword%' OR c.name LIKE '%$keyword%') 
-            ORDER BY a.published_at DESC 
-            LIMIT " . (int)$limit;
-    $result = $db->query($sql);
-    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    $keyword = '%' . trim($keyword) . '%';
+    $limit = max(1, min((int)$limit, 50));
+
+    return $db->fetchAll(
+        "SELECT a.*, c.name as category_name, u.username as author_name
+            FROM articles a
+            LEFT JOIN categories c ON a.category_id = c.id
+            LEFT JOIN users u ON a.author_id = u.id
+            WHERE a.status = 'published'
+              AND (a.title LIKE ? OR a.content LIKE ? OR a.excerpt LIKE ? OR c.name LIKE ?)
+            ORDER BY a.published_at DESC
+            LIMIT $limit",
+        [$keyword, $keyword, $keyword, $keyword]
+    );
 }
 
 /* authentication helpers */
@@ -410,7 +341,7 @@ function isAdmin() {
 }
 
 function redirect($url) {
-    header("Location: " . SITE_URL . ltrim($url, '/'));
+    header("Location: " . APP_URL . '/' . ltrim($url, '/'));
     exit;
 }
 

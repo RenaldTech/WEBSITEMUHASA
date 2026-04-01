@@ -2,34 +2,33 @@
 require_once '../includes/config.php';
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
+require_once __DIR__ . '/../src/classes/Auth.php';
+require_once __DIR__ . '/../src/classes/CSRFToken.php';
 
-global $db;
+$logger = new Logger(LOG_BASE_PATH);
+$auth = new Auth($db, $logger);
+$error = '';
+$username = '';
+$showCaptcha = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $db->escapeString($_POST['username']);
-    $password = $_POST['password'];
-    
-    $sql = "SELECT * FROM users WHERE username = '$username'";
-    $result = $db->query($sql);
-    
-    if ($result->num_rows > 0) {
-        $user = $result->fetch_assoc();
-        
-        // Verifikasi password dengan bcrypt
-        if (password_verify($password, $user['password'])) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['role'] = $user['role'];
-            $_SESSION['email'] = $user['email'];
-            
-            redirect('admin/dashboard.php');
-        } else {
-            $error = 'Password salah!';
-        }
+    $username = Validator::sanitizeString($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $csrfToken = $_POST['_csrf_token'] ?? '';
+
+    if (!CSRFToken::validate($csrfToken)) {
+        $error = 'Token CSRF tidak valid.';
+        $logger->warning('CSRF validation failed during login', ['ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown']);
     } else {
-        $error = 'Username tidak ditemukan!';
+        $result = $auth->login($username, $password, $_POST['g-recaptcha-response'] ?? null);
+        if ($result['success']) {
+            redirect('admin/dashboard.php');
+        }
+        $error = $result['message'];
     }
 }
+
+$showCaptcha = $auth->requiresCaptcha($username);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -38,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login - SMP Muhammadiyah</title>
     <link rel="stylesheet" href="../assets/css/style.css">
-    <style>
+    <style nonce="<?php echo htmlspecialchars(CSP_NONCE, ENT_QUOTES, 'UTF-8'); ?>">
         .login-container {
             max-width: 400px;
             margin: 50px auto;
@@ -130,9 +129,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
         
         <form method="POST">
+            <?php echo CSRFToken::inputField(); ?>
+            <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response" value="">
+
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" value="<?php echo htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?>" required>
             </div>
             
             <div class="form-group">
@@ -149,5 +151,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Password: admin123
         </div>
     </div>
+
+    <?php if ($showCaptcha && RECAPTCHA_SITE_KEY): ?>
+        <script src="https://www.google.com/recaptcha/api.js?render=<?php echo htmlspecialchars(RECAPTCHA_SITE_KEY, ENT_QUOTES, 'UTF-8'); ?>"></script>
+        <script nonce="<?php echo htmlspecialchars(CSP_NONCE, ENT_QUOTES, 'UTF-8'); ?>">
+            grecaptcha.ready(function() {
+                grecaptcha.execute('<?php echo htmlspecialchars(RECAPTCHA_SITE_KEY, ENT_QUOTES, 'UTF-8'); ?>', {action: 'login'}).then(function(token) {
+                    document.getElementById('g-recaptcha-response').value = token;
+                });
+            });
+        </script>
+    <?php elseif ($showCaptcha): ?>
+        <script>
+            console.warn('reCAPTCHA site key is not configured yet. Complete .env with RECAPTCHA_SITE_KEY and RECAPTCHA_SECRET_KEY.');
+        </script>
+    <?php endif; ?>
 </body>
 </html>

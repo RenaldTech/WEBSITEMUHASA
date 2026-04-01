@@ -14,39 +14,43 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] === 'add' || $_POST['action'] === 'edit') {
-            $student_name = $db->escapeString($_POST['student_name']);
-            $year = (int)$_POST['year'];
-            $achievement_title = $db->escapeString($_POST['achievement_title']);
-            $category = $db->escapeString($_POST['category']);
-            $level = $db->escapeString($_POST['level']);
+            $student_name = trim($_POST['student_name'] ?? '');
+            $year = (int)($_POST['year'] ?? 0);
+            $achievement_title = trim($_POST['achievement_title'] ?? '');
+            $category = trim($_POST['category'] ?? '');
+            $level = trim($_POST['level'] ?? '');
 
-            if (!$student_name || !$achievement_title) {
+            if ($student_name === '' || $achievement_title === '') {
                 $error = 'Nama siswa dan judul prestasi harus diisi!';
             } else {
                 if ($_POST['action'] === 'add') {
-                    $sql = "INSERT INTO achievements (student_name, year, achievement_title, category, level) 
-                            VALUES ('$student_name', $year, '$achievement_title', '$category', '$level')";
-                    if ($db->query($sql)) {
+                    $success = $db->execute(
+                        'INSERT INTO achievements (student_name, year, achievement_title, category, level) VALUES (?, ?, ?, ?, ?)',
+                        [$student_name, $year, $achievement_title, $category, $level]
+                    );
+
+                    if ($success) {
                         $message = 'Prestasi berhasil ditambahkan!';
                     } else {
                         $error = 'Gagal menambahkan prestasi!';
                     }
                 } else {
-                    $id = (int)$_POST['achievement_id'];
-                    $sql = "UPDATE achievements SET student_name='$student_name', year=$year, 
-                            achievement_title='$achievement_title', category='$category', level='$level' 
-                            WHERE id=$id";
-                    if ($db->query($sql)) {
+                    $id = (int)($_POST['achievement_id'] ?? 0);
+                    $success = $db->execute(
+                        'UPDATE achievements SET student_name = ?, year = ?, achievement_title = ?, category = ?, level = ? WHERE id = ?',
+                        [$student_name, $year, $achievement_title, $category, $level, $id]
+                    );
+
+                    if ($success) {
                         $message = 'Prestasi berhasil diupdate!';
                     } else {
                         $error = 'Gagal mengupdate prestasi!';
                     }
                 }
             }
-        } else if ($_POST['action'] === 'delete') {
-            $id = (int)$_POST['achievement_id'];
-            $sql = "DELETE FROM achievements WHERE id=$id";
-            if ($db->query($sql)) {
+        } elseif ($_POST['action'] === 'delete') {
+            $id = (int)($_POST['achievement_id'] ?? 0);
+            if ($db->execute('DELETE FROM achievements WHERE id = ?', [$id])) {
                 $message = 'Prestasi berhasil dihapus!';
             } else {
                 $error = 'Gagal menghapus prestasi!';
@@ -56,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Ambil data prestasi
-$achievements = $db->query("SELECT * FROM achievements ORDER BY year DESC, no ASC")->fetch_all(MYSQLI_ASSOC);
+$achievements = $db->fetchAll('SELECT * FROM achievements ORDER BY year DESC, no ASC');
 ?>
 
 <?php if ($message): ?>

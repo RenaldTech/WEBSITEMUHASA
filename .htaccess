@@ -2,36 +2,47 @@
 RewriteEngine On
 RewriteBase /website/
 
-# Redirect static HTML files to PHP versions
+# Force HTTPS when configured
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Clean URL fallback to PHP files
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^(.*)$ $1.php [L]
 
-# Redirect /pages/*.html to root PHP files
+# Redirect legacy HTML pages to current PHP paths
 RewriteRule ^pages/akademik\.html$ akademik.php [L,R=301]
 RewriteRule ^pages/berita\.html$ berita.php [L,R=301]
 RewriteRule ^pages/galeri\.html$ galeri.php [L,R=301]
 RewriteRule ^pages/kontak\.html$ kontak.php [L,R=301]
 RewriteRule ^pages/spmb\.html$ spmb.php [L,R=301]
 RewriteRule ^pages/artikel-.*\.html$ artikel.php [L,R=301]
-
-# Redirect index.html to index.php
 RewriteRule ^index\.html$ index.php [L,R=301]
 
-# Security
-<FilesMatch "\.php$">
-    Order Allow,Deny
-    Allow from all
-</FilesMatch>
+# Block direct access to sensitive resources
+RewriteRule ^(src|logs|includes)(/.*)?$ - [F,NC,L]
+RewriteRule ^\.env$ - [F,NC,L]
 
-<FilesMatch "^database\.sql$">
-    Order Deny,Allow
-    Deny from all
-</FilesMatch>
+# Block common attack patterns in URL and query strings
+RewriteCond %{QUERY_STRING} (cmd=|exec=|union\s+select|insert\s+into|drop\s+table|<script|javascript:|base64_decode) [NC]
+RewriteRule .* - [F,L]
 
-<FilesMatch "^\.env$">
-    Order Deny,Allow
-    Deny from all
-</FilesMatch>
-
-# Deny directory listing
+# Disable directory listings
 Options -Indexes
+
+# Custom error pages
+ErrorDocument 403 /website/403.php
+ErrorDocument 404 /website/404.php
+ErrorDocument 500 /website/500.php
+
+# Security headers when mod_headers is available
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=()"
+</IfModule>
